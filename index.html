@@ -35,6 +35,132 @@
       </div>
     </section>
 
-    <script></script>
+    <script>
+      // DOM for each stage (total 3)
+      const startGameScene = document.getElementById('start-game');
+      const playGameScene = document.getElementById('play-game');
+      const endGameScene = document.getElementById('end-game');
+
+      // Start scene
+      const startButton = document.getElementById('start-button');
+
+      // Gameplay scene
+      const questionDisplay = document.getElementById('question');
+      const answerButtonList = document.getElementById('answer-button');
+      const counterDisplay = document.getElementById('counter');
+      const restartGameButton = document.getElementById('restartgame-button');
+
+      // End scene
+      const endMessageDisplay = document.getElementById('end-message');
+      const restartEndGameButton = document.getElementById('restart-button');
+
+      // global variations
+      let answer = '';
+      let counter = 10;
+      const api = 'https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0';
+
+      // function
+      const startGamePlay = async () => {
+        try {
+          const response = await fetch(api);
+
+          if (!response.ok) {
+            throw new Error('cannot fetch the data');
+          }
+
+          const responseJSON = await response.json();
+          const randomIndex = Math.floor(
+            Math.random() * responseJSON.results.length
+          );
+
+          let selectedAnswer = responseJSON.results[randomIndex].name;
+
+          answer = selectedAnswer;
+
+          selectedAnswer = selectedAnswer.replace(/./g, '_');
+
+          questionDisplay.innerText = selectedAnswer;
+
+          console.log('answer', answer);
+
+          counter = 10;
+          counterDisplay.innerHTML = counter;
+          answerButtonList.innerHTML = '';
+          generateAnswerList();
+        } catch (err) {
+          console.log('error', err);
+          alert('something went wrong');
+        }
+      };
+
+      const generateAnswerList = () => {
+        for (let i = 0; i < 26; i++) {
+          let letter = String.fromCharCode('A'.charCodeAt(0) + i);
+          let button = document.createElement('button');
+          button.innerText = letter;
+
+          button.addEventListener('click', (event) => {
+            let currentLetter = event.target.innerText.toLowerCase();
+            let currentQuestion = questionDisplay.innerText.split('');
+
+            for (let i = 0; i < answer.length; i++) {
+              if (currentLetter === answer[i]) {
+                currentQuestion[i] = currentLetter;
+              }
+            }
+
+            const currentAnswerQuestion = currentQuestion.join('');
+            questionDisplay.innerText = currentQuestion.join('');
+
+            event.target.disabled = true;
+            counter -= 1;
+            counterDisplay.innerText = counter;
+
+            if (counter === 0) {
+              endGamePlay('Game Over');
+            }
+
+            if (currentAnswerQuestion === answer) {
+              endGamePlay(`Successful! Your answer is ${answer}`);
+            }
+          });
+
+          answerButtonList.appendChild(button);
+        }
+      };
+
+      restartGameButton.addEventListener('click', () => {
+        playGameScene.classList.add('hidden');
+        playGameScene.classList.remove('play-center');
+        startGameScene.classList.remove('hidden');
+      });
+
+      const endGamePlay = (displayText) => {
+        endMessageDisplay.innerText = displayText;
+
+        playGameScene.classList.add('hidden');
+        playGameScene.classList.remove('play-center');
+        endGameScene.classList.remove('hidden');
+      };
+
+      // Event listerner
+      startButton.addEventListener('click', () => {
+        startGameScene.classList.add('hidden');
+        playGameScene.classList.remove('hidden');
+        playGameScene.classList.add('play-center');
+
+        startGamePlay();
+      });
+
+      restartEndGameButton.addEventListener('click', () => {
+        endGameScene.classList.add('hidden');
+        playGameScene.classList.remove('hidden');
+        playGameScene.classList.add('play-center');
+
+        startGamePlay();
+      });
+
+      // BONUS => pokemon name must not include special characters
+    </script>
   </body>
 </html>
